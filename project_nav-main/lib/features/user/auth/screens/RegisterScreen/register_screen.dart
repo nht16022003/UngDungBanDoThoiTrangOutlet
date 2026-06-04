@@ -13,6 +13,11 @@ import '../../widgets/auth_header.dart';
 import '../../widgets/auth_text_field.dart';
 import '../../widgets/password_text_field.dart';
 import '../../widgets/social_login_button.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+final TextEditingController emailController = TextEditingController();
+
+final TextEditingController passwordController = TextEditingController();
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
@@ -28,7 +33,8 @@ class RegisterScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const AuthBanner(
-                imageUrl: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b',
+                imageUrl:
+                    'https://images.unsplash.com/photo-1529139574466-a303027c1d8b',
               ),
               const SizedBox(height: AppSpacing.xl),
               const AuthHeader(
@@ -36,13 +42,13 @@ class RegisterScreen extends StatelessWidget {
                 subtitle: 'Tạo tài khoản mới để bắt đầu',
               ),
               const SizedBox(height: AppSpacing.xl),
-              const AuthTextField(hintText: 'Họ và tên', prefixIcon: Icons.person_outline),
-              const SizedBox(height: AppSpacing.lg),
-              const AuthTextField(
+              AuthTextField(
+                controller: emailController,
                 hintText: 'Email',
                 prefixIcon: Icons.email_outlined,
-                keyboardType: TextInputType.emailAddress,
               ),
+              const SizedBox(height: AppSpacing.lg),
+
               const SizedBox(height: AppSpacing.lg),
               const AuthTextField(
                 hintText: 'Số điện thoại',
@@ -50,18 +56,42 @@ class RegisterScreen extends StatelessWidget {
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: AppSpacing.lg),
-              const PasswordTextField(),
+              PasswordTextField(controller: passwordController),
               const SizedBox(height: AppSpacing.lg),
-              const PasswordTextField(),
+
               const SizedBox(height: AppSpacing.xl),
               // Tạo tài khoản → UserTabNavigation
               PrimaryButton(
                 tieuDe: 'Tạo tài khoản',
-                onPressed: () => Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => const UserTabNavigation()),
-                  (route) => false,
-                ),
+                onPressed: () async {
+                  if (emailController.text.trim().isEmpty ||
+                      passwordController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Vui lòng nhập đầy đủ thông tin'),
+                      ),
+                    );
+
+                    return;
+                  }
+
+                  try {
+                    await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                      email: emailController.text.trim(),
+                      password: passwordController.text,
+                    );
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Đăng ký thành công')),
+                    );
+
+                    Navigator.pop(context);
+                  } on FirebaseAuthException catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(e.message ?? 'Lỗi đăng ký')),
+                    );
+                  }
+                },
               ),
               const SizedBox(height: AppSpacing.xl),
               const AuthDivider(),

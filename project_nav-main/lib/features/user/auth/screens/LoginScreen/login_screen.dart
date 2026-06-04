@@ -25,6 +25,7 @@ import '../../../../../core/theme/app_typography.dart';
 import '../../../../../core/widgets/buttons/primary_button.dart';
 import '../../../../../core/navigation/root_navigation.dart';
 import '../../../../../providers/store_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../widgets/auth_banner.dart';
 import '../../widgets/auth_header.dart';
 import '../../widgets/auth_text_field.dart';
@@ -44,6 +45,9 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   String _selectedUserId = 'USER01';
+  final TextEditingController emailController = TextEditingController();
+
+  final TextEditingController passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +60,8 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const AuthBanner(
-                imageUrl: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c',
+                imageUrl:
+                    'https://images.unsplash.com/photo-1496747611176-843222e1e57c',
               ),
               const SizedBox(height: AppSpacing.xl),
               const AuthHeader(
@@ -64,29 +69,33 @@ class _LoginScreenState extends State<LoginScreen> {
                 subtitle: 'Đăng nhập để tiếp tục mua sắm',
               ),
               const SizedBox(height: AppSpacing.xl),
-              const AuthTextField(
+              AuthTextField(
+                controller: emailController,
                 hintText: 'Email',
                 prefixIcon: Icons.email_outlined,
-                keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: AppSpacing.lg),
-              const PasswordTextField(),
+              PasswordTextField(controller: passwordController),
               const SizedBox(height: AppSpacing.md),
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const ForgotPasswordScreen(),
+                    ),
                   ),
                   child: const Text('Quên mật khẩu?'),
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              
+
               Text(
                 'Tài khoản đăng nhập thử nghiệm:',
-                style: AppTypography.noiDung.copyWith(fontWeight: FontWeight.w600),
+                style: AppTypography.noiDung.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
               Container(
@@ -125,17 +134,42 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
-              
+
               PrimaryButton(
                 tieuDe: 'Đăng nhập',
-                onPressed: () {
-                  final store = Provider.of<StoreProvider>(context, listen: false);
-                  store.switchUser(_selectedUserId);
-                  Navigator.pushAndRemoveUntil(
+                onPressed: () async {
+                  final store = Provider.of<StoreProvider>(
                     context,
-                    MaterialPageRoute(builder: (_) => const RootNavigation()),
-                    (route) => false,
+                    listen: false,
                   );
+                  if (emailController.text.trim().isEmpty ||
+                      passwordController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Vui lòng nhập email và mật khẩu'),
+                      ),
+                    );
+
+                    return;
+                  }
+                  try {
+                    await FirebaseAuth.instance.signInWithEmailAndPassword(
+                      email: emailController.text.trim(),
+                      password: passwordController.text,
+                    );
+
+                    if (!mounted) return;
+
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RootNavigation()),
+                      (route) => false,
+                    );
+                  } on FirebaseAuthException catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(e.message ?? 'Lỗi đăng nhập')),
+                    );
+                  }
                 },
               ),
               const SizedBox(height: AppSpacing.xl),
@@ -169,4 +203,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-

@@ -14,4 +14,3 @@ class RootNavigation extends StatelessWidget {
     return store.isAdmin ? const AdminNavigation() : const UserTabNavigation();
   }
 }
-

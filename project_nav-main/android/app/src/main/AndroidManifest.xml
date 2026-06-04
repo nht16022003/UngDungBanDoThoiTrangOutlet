@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name='android.permission.INTERNET'></uses-permission>
     <application
         android:label="nhom10_ung_dung_ban_do_thoi_trang_outlet"
         android:name="${applicationName}"
